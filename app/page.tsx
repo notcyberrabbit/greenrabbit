@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Rabbit, TrendingUp } from 'lucide-react'
+import { TrendingUp } from 'lucide-react'
 import TokenForm from '@/components/TokenForm'
 import TokenMetrics from '@/components/TokenMetrics'
 import CreatorInfo from '@/components/CreatorInfo'
@@ -101,7 +101,7 @@ export default function Home() {
       <header className={styles.header}>
         <div className={styles.headerContent}>
           <div className={styles.logo}>
-            <Rabbit size={32} className={styles.rabbitIcon} />
+         <span style={{fontSize: '2rem'}}>🐇</span>
             <h1>GreenRabbit</h1>
           </div>
           <p className={styles.tagline}>Token Analytics Dashboard for Bags.fm</p>
@@ -159,7 +159,7 @@ export default function Home() {
         {!tokenData && !loading && !error && (
           <div className={styles.welcome}>
             <div className={styles.welcomeContent}>
-              <Rabbit size={64} className={styles.welcomeIcon} />
+        <span style={{fontSize: '2rem'}}>🐇</span>
               <h2>Enter a Token Address</h2>
               <p>The Rabbit will analyze fees, creators, and reveal insights from Bags.fm token data</p>
             </div>
