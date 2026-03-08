@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Rabbit } from 'lucide-react'
+import { Search } from 'lucide-react'
 import WalletForm from '@/components/WalletForm'
 import TokenTable from '@/components/TokenTable'
 import Analysis from '@/components/Analysis'
@@ -93,7 +93,7 @@ export default function Home() {
       <header className={styles.header}>
         <div className={styles.headerContent}>
           <div className={styles.logo}>
-            <Rabbit size={32} className={styles.rabbitIcon} />
+       <span style={{color: '#00d084', fontSize: '2rem'}}>🐇</span>
             <h1>GreenRabbit</h1>
           </div>
           <p className={styles.tagline}>Solana Wallet Analyzer for Bags.fm Tokens</p>
@@ -165,7 +165,7 @@ export default function Home() {
         {!walletData && !loading && !error && (
           <div className={styles.welcome}>
             <div className={styles.welcomeContent}>
-              <Rabbit size={64} className={styles.welcomeIcon} />
+          <span style={{color: '#00d084', fontSize: '2rem'}}>🐇</span>
               <h2>Enter a Solana Wallet Address</h2>
               <p>The Rabbit will analyze your trading patterns and reveal insights into your Bags.fm portfolio</p>
             </div>
