@@ -72,11 +72,13 @@ export async function POST(request: NextRequest) {
         address: cleanAddress,
         symbol: cleanAddress.slice(0, 6).toUpperCase(),
         name: `Token ${cleanAddress.slice(0, 8)}...`,
-        fees: {
-          lifetimeFeesCollected: feesInSol,
-          feesCollectedNative: feesInSol,
-          currency: 'SOL',
-        },
+     fees: {
+  lifetimeFeesCollected: feesInSol,
+  feesCollectedNative: feesInSol,
+  creatorFeePercentage: 0,
+  totalFeePercentage: 0,
+  currency: 'SOL',
+},
         creators,
       },
     })
