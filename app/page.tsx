@@ -39,12 +39,14 @@ export default function Home() {
   const [error, setError] = useState('')
   const [analysis, setAnalysis] = useState('')
   const [analyzingAI, setAnalyzingAI] = useState(false)
+  const [billingError, setBillingError] = useState(false)
 
   const handleTokenSubmit = async (tokenAddress: string) => {
     setLoading(true)
     setError('')
     setTokenData(null)
     setAnalysis('')
+    setBillingError(false)
 
     try {
       const response = await fetch('/api/token', {
@@ -60,8 +62,6 @@ export default function Home() {
 
       const data = await response.json()
       setTokenData(data)
-
-      // Trigger AI analysis
       analyzeToken(data, tokenAddress)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
@@ -82,12 +82,14 @@ export default function Home() {
         }),
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to analyze token')
-      }
-
       const result = await response.json()
-      setAnalysis(result.analysis)
+
+      if (result.billingError) {
+        setBillingError(true)
+        setAnalysis('')
+      } else {
+        setAnalysis(result.analysis || 'Unable to generate analysis at this time.')
+      }
     } catch (err) {
       console.error('Analysis error:', err)
       setAnalysis('Unable to generate analysis at this time.')
@@ -101,7 +103,7 @@ export default function Home() {
       <header className={styles.header}>
         <div className={styles.headerContent}>
           <div className={styles.logo}>
-         <span style={{fontSize: '2rem'}}>🐇</span>
+            <span style={{fontSize: '2rem'}}>🐇</span>
             <h1>GreenRabbit</h1>
           </div>
           <p className={styles.tagline}>Token Analytics Dashboard for Bags.fm</p>
@@ -148,10 +150,17 @@ export default function Home() {
             )}
 
             <section className={styles.section}>
-              <Analysis
-                analysis={analysis}
-                loading={analyzingAI}
-              />
+              {billingError ? (
+                <div className={styles.card} style={{textAlign: 'center', padding: '2rem'}}>
+                  <p style={{fontSize: '2rem', marginBottom: '1rem'}}>🐇</p>
+                  <h3 style={{color: '#00d084', marginBottom: '0.5rem'}}>The Rabbit is Resting...</h3>
+                  <p style={{color: '#a8d5ba'}}>
+                    AI analysis will be available soon. The data above reveals all the secrets for now.
+                  </p>
+                </div>
+              ) : (
+                <Analysis analysis={analysis} loading={analyzingAI} />
+              )}
             </section>
           </>
         )}
@@ -159,7 +168,7 @@ export default function Home() {
         {!tokenData && !loading && !error && (
           <div className={styles.welcome}>
             <div className={styles.welcomeContent}>
-        <span style={{fontSize: '2rem'}}>🐇</span>
+              <span style={{fontSize: '4rem'}}>🐇</span>
               <h2>Enter a Token Address</h2>
               <p>The Rabbit will analyze fees, creators, and reveal insights from Bags.fm token data</p>
             </div>
