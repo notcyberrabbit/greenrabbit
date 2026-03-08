@@ -1,7 +1,7 @@
 {
   "name": "greenrabbit",
-  "version": "1.0.0",
-  "description": "Solana wallet analyzer for Bags.fm tokens",
+  "version": "2.0.0",
+  "description": "Token Analytics Dashboard for Bags.fm",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -15,7 +15,9 @@
     "react-dom": "^18.2.0",
     "axios": "^1.6.2",
     "@anthropic-ai/sdk": "^0.20.0",
-    "lucide-react": "^0.263.1"
+    "lucide-react": "^0.263.1",
+    "@bagsfm/bags-sdk": "^1.0.0",
+    "@solana/web3.js": "^1.78.0"
   },
   "devDependencies": {
     "typescript": "^5.3.3",

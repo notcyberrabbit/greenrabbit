@@ -1,3 +1,25 @@
 {
-  "framework": "nextjs"
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "env": [
+    {
+      "key": "ANTHROPIC_API_KEY",
+      "description": "Anthropic API key for Claude AI",
+      "value": ""
+    },
+    {
+      "key": "NEXT_PUBLIC_BAGS_API_KEY",
+      "description": "Bags.fm API key (optional)",
+      "value": "",
+      "required": false
+    }
+  ],
+  "functions": {
+    "api/**/*.ts": {
+      "memory": 256,
+      "maxDuration": 30
+    }
+  }
 }

@@ -1,0 +1,241 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { BagsSDK } from '@bagsfm/bags-sdk'
+import { LAMPORTS_PER_SOL, PublicKey, Connection } from '@solana/web3.js'
+
+/**
+ * Validate Solana token address format (base58, 43-44 characters)
+ */
+function isValidTokenAddress(address: string): boolean {
+  const base58Regex = /^[1-9A-HJ-NP-Z]{43,44}$/
+  return base58Regex.test(address)
+}
+
+/**
+ * Initialize Bags SDK
+ */
+function initializeBagsSDK(): BagsSDK {
+  const rpcUrl = process.env.SOLANA_RPC_URL || 'https://api.mainnet-beta.solana.com'
+  const apiKey = process.env.BAGS_API_KEY
+
+  if (!apiKey) {
+    console.warn('[Bags SDK] No BAGS_API_KEY provided, using public endpoint')
+  }
+
+  const connection = new Connection(rpcUrl, 'processed')
+  const sdk = new BagsSDK(apiKey || '', connection, 'processed')
+
+  return sdk
+}
+
+/**
+ * Fetch token lifetime fees using Bags SDK
+ */
+async function fetchTokenFeesBagsSDK(tokenMint: PublicKey): Promise<{
+  lifetimeFeesCollected: number
+  creatorFeePercentage: number
+  totalFeePercentage: number
+  feesCollectedNative: number
+  currency: string
+} | null> {
+  try {
+    console.log(`[Bags SDK] Fetching lifetime fees for token: ${tokenMint.toString()}`)
+
+    const sdk = initializeBagsSDK()
+
+    // Fetch lifetime fees in lamports
+    const feesLamports = await sdk.state.getTokenLifetimeFees(tokenMint)
+
+    console.log(`[Bags SDK] Lifetime fees (lamports): ${feesLamports}`)
+
+    // Convert lamports to SOL
+    const feesInSol = Number(feesLamports) / LAMPORTS_PER_SOL
+
+    console.log(`[Bags SDK] Lifetime fees (SOL): ${feesInSol}`)
+
+    // Fetch token state for fee percentages
+    const tokenState = await sdk.state.getTokenState(tokenMint)
+
+    console.log('[Bags SDK] Token state fetched successfully')
+
+    return {
+      lifetimeFeesCollected: feesInSol,
+      creatorFeePercentage: tokenState.creatorFeeBps ? tokenState.creatorFeeBps / 100 : 0,
+      totalFeePercentage: tokenState.feeBps ? tokenState.feeBps / 100 : 0,
+      feesCollectedNative: Number(feesLamports),
+      currency: 'SOL',
+    }
+  } catch (error: any) {
+    console.error('[Bags SDK] Error fetching token fees:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+    })
+    return null
+  }
+}
+
+/**
+ * Fetch token creators using Bags SDK
+ */
+async function fetchTokenCreatorsBagsSDK(tokenMint: PublicKey): Promise<
+  {
+    address: string
+    name?: string
+    isVerified: boolean
+    createdAt: string
+    description?: string
+  }[]
+> {
+  try {
+    console.log(`[Bags SDK] Fetching creators for token: ${tokenMint.toString()}`)
+
+    const sdk = initializeBagsSDK()
+
+    // Fetch token metadata which includes creator info
+    const tokenMetadata = await sdk.state.getTokenMetadata(tokenMint)
+
+    if (!tokenMetadata) {
+      console.log('[Bags SDK] No metadata found for token')
+      return []
+    }
+
+    console.log('[Bags SDK] Token metadata fetched')
+
+    // Construct creator information from metadata
+    const creators: {
+      address: string
+      name?: string
+      isVerified: boolean
+      createdAt: string
+      description?: string
+    }[] = []
+
+    if (tokenMetadata.creator) {
+      creators.push({
+        address: tokenMetadata.creator.toString(),
+        name: tokenMetadata.name || undefined,
+        isVerified: tokenMetadata.verified || false,
+        createdAt: new Date(tokenMetadata.createdAt || Date.now()).toISOString(),
+        description: tokenMetadata.description || undefined,
+      })
+    }
+
+    console.log(`[Bags SDK] Found ${creators.length} creator(s)`)
+
+    return creators
+  } catch (error: any) {
+    console.error('[Bags SDK] Error fetching creators:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+    })
+    return []
+  }
+}
+
+/**
+ * Extract token symbol and name
+ */
+function extractTokenInfo(
+  address: string,
+  creatorData: { name?: string }[]
+): { symbol: string; name: string } {
+  if (creatorData.length > 0 && creatorData[0].name) {
+    return {
+      symbol: creatorData[0].name.toUpperCase().slice(0, 6),
+      name: creatorData[0].name,
+    }
+  }
+
+  return {
+    symbol: address.slice(0, 6).toUpperCase(),
+    name: `Token ${address.slice(0, 8)}...`,
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const { tokenAddress } = await request.json()
+
+    // Validate input
+    if (!tokenAddress || typeof tokenAddress !== 'string') {
+      return NextResponse.json(
+        { error: 'Invalid token address' },
+        { status: 400 }
+      )
+    }
+
+    // Validate token address format
+    if (!isValidTokenAddress(tokenAddress.trim())) {
+      return NextResponse.json(
+        { error: 'Invalid Solana token address format. Must be 43-44 character base58 string.' },
+        { status: 400 }
+      )
+    }
+
+    const cleanAddress = tokenAddress.trim()
+
+    console.log(`[Token Analytics] Starting analysis for: ${cleanAddress}`)
+
+    // Convert to PublicKey
+    let tokenMint: PublicKey
+    try {
+      tokenMint = new PublicKey(cleanAddress)
+      console.log(`[Token Analytics] Valid PublicKey: ${tokenMint.toString()}`)
+    } catch (error) {
+      return NextResponse.json(
+        { error: 'Invalid token address. Could not parse as Solana PublicKey.' },
+        { status: 400 }
+      )
+    }
+
+    // Fetch both fees and creators in parallel using Bags SDK
+    const [feesData, creatorsData] = await Promise.all([
+      fetchTokenFeesBagsSDK(tokenMint),
+      fetchTokenCreatorsBagsSDK(tokenMint),
+    ])
+
+    // Check if we got any data
+    if (!feesData && creatorsData.length === 0) {
+      console.warn(`[Token Analytics] No data found for token: ${cleanAddress}`)
+      return NextResponse.json(
+        { error: 'Token not found. Please verify the address and try again.' },
+        { status: 404 }
+      )
+    }
+
+    // Extract token info
+    const tokenInfo = extractTokenInfo(cleanAddress, creatorsData)
+
+    // Build analytics response
+    const tokenAnalytics = {
+      address: cleanAddress,
+      symbol: tokenInfo.symbol,
+      name: tokenInfo.name,
+      fees: feesData || {
+        lifetimeFeesCollected: 0,
+        creatorFeePercentage: 0,
+        totalFeePercentage: 0,
+        feesCollectedNative: 0,
+        currency: 'SOL',
+      },
+      creators: creatorsData,
+    }
+
+    console.log(`[Token Analytics] Analysis complete for: ${cleanAddress}`)
+
+    return NextResponse.json({
+      address: cleanAddress,
+      tokenAnalytics,
+    })
+  } catch (error) {
+    console.error('[Token API] Fatal error:', error)
+    return NextResponse.json(
+      {
+        error: 'Failed to fetch token analytics',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    )
+  }
+}
