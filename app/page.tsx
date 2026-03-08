@@ -1,59 +1,68 @@
 'use client'
 
 import { useState } from 'react'
-import { Search } from 'lucide-react'
-import WalletForm from '@/components/WalletForm'
-import TokenTable from '@/components/TokenTable'
+import { Rabbit, TrendingUp } from 'lucide-react'
+import TokenForm from '@/components/TokenForm'
+import TokenMetrics from '@/components/TokenMetrics'
+import CreatorInfo from '@/components/CreatorInfo'
 import Analysis from '@/components/Analysis'
 import styles from './page.module.css'
 
-interface Token {
-  symbol: string
+interface TokenAnalytics {
   address: string
-  bought: number
-  sold: number
-  netAmount: number
-  buyDate?: string
-  sellDate?: string
-  totalSpent?: number
-  totalEarned?: number
+  symbol: string
+  name: string
+  fees: {
+    lifetimeFeesCollected: number
+    creatorFeePercentage: number
+    totalFeePercentage: number
+    feesCollectedNative: number
+    currency: string
+  }
+  creators: {
+    address: string
+    name?: string
+    isVerified: boolean
+    createdAt: string
+    description?: string
+  }[]
 }
 
-interface WalletData {
+interface TokenData {
   address: string
-  tokens: Token[]
+  tokenAnalytics: TokenAnalytics
 }
 
 export default function Home() {
-  const [walletData, setWalletData] = useState<WalletData | null>(null)
+  const [tokenData, setTokenData] = useState<TokenData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [analysis, setAnalysis] = useState('')
   const [analyzingAI, setAnalyzingAI] = useState(false)
 
-  const handleWalletSubmit = async (walletAddress: string) => {
+  const handleTokenSubmit = async (tokenAddress: string) => {
     setLoading(true)
     setError('')
-    setWalletData(null)
+    setTokenData(null)
     setAnalysis('')
 
     try {
-      const response = await fetch('/api/wallet', {
+      const response = await fetch('/api/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletAddress }),
+        body: JSON.stringify({ tokenAddress }),
       })
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || 'Failed to fetch wallet data')
+        throw new Error(data.error || 'Failed to fetch token analytics')
       }
 
       const data = await response.json()
-      setWalletData(data)
+      setTokenData(data)
 
       // Trigger AI analysis
-      analyzeWallet(data, walletAddress)
+      analyzeToken(data, tokenAddress)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
@@ -61,27 +70,26 @@ export default function Home() {
     }
   }
 
-  const analyzeWallet = async (data: WalletData, walletAddress: string) => {
+  const analyzeToken = async (data: TokenData, tokenAddress: string) => {
     setAnalyzingAI(true)
     try {
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          walletAddress,
-          tokens: data.tokens,
+          tokenAddress,
+          analytics: data.tokenAnalytics,
         }),
       })
 
       if (!response.ok) {
-        throw new Error('Failed to analyze wallet')
+        throw new Error('Failed to analyze token')
       }
 
       const result = await response.json()
       setAnalysis(result.analysis)
     } catch (err) {
       console.error('Analysis error:', err)
-      // Don't fail the whole app if analysis fails
       setAnalysis('Unable to generate analysis at this time.')
     } finally {
       setAnalyzingAI(false)
@@ -93,16 +101,16 @@ export default function Home() {
       <header className={styles.header}>
         <div className={styles.headerContent}>
           <div className={styles.logo}>
-       <span style={{color: '#00d084', fontSize: '2rem'}}>🐇</span>
+            <Rabbit size={32} className={styles.rabbitIcon} />
             <h1>GreenRabbit</h1>
           </div>
-          <p className={styles.tagline}>Solana Wallet Analyzer for Bags.fm Tokens</p>
+          <p className={styles.tagline}>Token Analytics Dashboard for Bags.fm</p>
         </div>
         <div className={styles.headerGlow}></div>
       </header>
 
       <div className="container">
-        <WalletForm onSubmit={handleWalletSubmit} loading={loading} />
+        <TokenForm onSubmit={handleTokenSubmit} loading={loading} />
 
         {error && (
           <div className={styles.error}>
@@ -110,64 +118,50 @@ export default function Home() {
           </div>
         )}
 
-        {walletData && (
+        {tokenData && (
           <>
             <section className={styles.section}>
-              <div className={styles.walletInfo}>
-                <h2>Portfolio Overview</h2>
-                <p className={styles.address}>
-                  Wallet: <span>{walletData.address.slice(0, 8)}...{walletData.address.slice(-8)}</span>
-                </p>
-                <div className={styles.stats}>
-                  <div className={styles.stat}>
-                    <div className={styles.statLabel}>Total Tokens</div>
-                    <div className={styles.statValue}>{walletData.tokens.length}</div>
-                  </div>
-                  <div className={styles.stat}>
-                    <div className={styles.statLabel}>Transactions</div>
-                    <div className={styles.statValue}>
-                      {walletData.tokens.reduce((acc, token) => {
-                        let count = 0
-                        if (token.bought > 0) count++
-                        if (token.sold > 0) count++
-                        return acc + count
-                      }, 0)}
-                    </div>
-                  </div>
+              <div className={styles.tokenHeader}>
+                <div>
+                  <h2>{tokenData.tokenAnalytics.symbol || 'TOKEN'}</h2>
+                  <p className={styles.tokenName}>
+                    {tokenData.tokenAnalytics.name || 'Unknown Token'}
+                  </p>
+                  <p className={styles.address}>
+                    Address: <span>{tokenData.address.slice(0, 12)}...{tokenData.address.slice(-12)}</span>
+                  </p>
                 </div>
+                <TrendingUp size={48} className={styles.headerIcon} />
               </div>
             </section>
 
-            {walletData.tokens.length > 0 ? (
-              <>
-                <section className={styles.section}>
-                  <h2>Transaction History</h2>
-                  <TokenTable tokens={walletData.tokens} />
-                </section>
+            <section className={styles.section}>
+              <h2>Fee Analytics</h2>
+              <TokenMetrics metrics={tokenData.tokenAnalytics.fees} />
+            </section>
 
-                <section className={styles.section}>
-                  <Analysis
-                    analysis={analysis}
-                    loading={analyzingAI}
-                  />
-                </section>
-              </>
-            ) : (
-              <div className={styles.noTokens}>
-                <Search size={48} className={styles.noTokensIcon} />
-                <h3>No tokens found</h3>
-                <p>This wallet doesn't have any Bags.fm token transactions</p>
-              </div>
+            {tokenData.tokenAnalytics.creators && tokenData.tokenAnalytics.creators.length > 0 && (
+              <section className={styles.section}>
+                <h2>Creator Information</h2>
+                <CreatorInfo creators={tokenData.tokenAnalytics.creators} />
+              </section>
             )}
+
+            <section className={styles.section}>
+              <Analysis
+                analysis={analysis}
+                loading={analyzingAI}
+              />
+            </section>
           </>
         )}
 
-        {!walletData && !loading && !error && (
+        {!tokenData && !loading && !error && (
           <div className={styles.welcome}>
             <div className={styles.welcomeContent}>
-          <span style={{color: '#00d084', fontSize: '2rem'}}>🐇</span>
-              <h2>Enter a Solana Wallet Address</h2>
-              <p>The Rabbit will analyze your trading patterns and reveal insights into your Bags.fm portfolio</p>
+              <Rabbit size={64} className={styles.welcomeIcon} />
+              <h2>Enter a Token Address</h2>
+              <p>The Rabbit will analyze fees, creators, and reveal insights from Bags.fm token data</p>
             </div>
           </div>
         )}
@@ -175,13 +169,13 @@ export default function Home() {
         {loading && (
           <div className={styles.loading}>
             <div className={styles.spinner}></div>
-            <p>The Rabbit is sniffing out your tokens...</p>
+            <p>The Rabbit is gathering token intelligence...</p>
           </div>
         )}
       </div>
 
       <footer className={styles.footer}>
-        <p>🐰 GreenRabbit — Powered by AI & Blockchain</p>
+        <p>🐰 GreenRabbit — Token Analytics Powered by AI & Bags.fm</p>
       </footer>
     </main>
   )
