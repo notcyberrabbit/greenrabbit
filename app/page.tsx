@@ -41,6 +41,7 @@ export default function Home() {
   const [analysis, setAnalysis] = useState('')
   const [analyzingAI, setAnalyzingAI] = useState(false)
   const [billingError, setBillingError] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const handleTokenSubmit = async (tokenAddress: string) => {
     setLoading(true)
@@ -99,6 +100,14 @@ export default function Home() {
     }
   }
 
+  const handleCopy = () => {
+    if (tokenData) {
+      navigator.clipboard.writeText(tokenData.address)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
   return (
     <main className={styles.main}>
       <header className={styles.header}>
@@ -131,28 +140,24 @@ export default function Home() {
                   <p className={styles.tokenName}>
                     {tokenData.tokenAnalytics.name || 'Unknown Token'}
                   </p>
-               <p className={styles.address}>
-<p className={styles.address}>
-  Address: <span>{tokenData.address.slice(0, 12)}...{tokenData.address.slice(-12)}</span>
-  {' '}
-  <button
-    onClick={() => {
-      navigator.clipboard.writeText(tokenData.address)
-      alert('Copied!')
-    }}
-    style={{background: 'transparent', border: '1px solid #00d084', color: '#00d084', padding: '0.2rem 0.5rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', marginRight: '0.5rem'}}
-  >
-    📋 Copy
-  </button>
-  <a 
-    href={`https://bags.fm/${tokenData.address}`}
-    target="_blank"
-    rel="noopener noreferrer"
-    style={{color: '#00d084', fontSize: '0.85rem'}}
-  >
-    → View on Bags.fm
-  </a>
-</p>
+                  <p className={styles.address}>
+                    Address: <span>{tokenData.address.slice(0, 12)}...{tokenData.address.slice(-12)}</span>
+                    {' '}
+                    <button
+                      onClick={handleCopy}
+                      style={{background: 'transparent', border: '1px solid #00d084', color: '#00d084', padding: '0.2rem 0.5rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', marginRight: '0.5rem'}}
+                    >
+                      {copied ? '✅ Copied!' : '📋 Copy'}
+                    </button>
+                    <a
+                      href={`https://bags.fm/${tokenData.address}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{color: '#00d084', fontSize: '0.85rem'}}
+                    >
+                      → View on Bags.fm
+                    </a>
+                  </p>
                 </div>
                 <TrendingUp size={48} className={styles.headerIcon} />
               </div>
