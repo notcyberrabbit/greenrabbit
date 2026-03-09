@@ -153,14 +153,8 @@ export default function Home() {
               >
                 → Bags.fm
               </a>
-            </p>
-          </div>
-          <TrendingUp size={32} className={styles.headerIcon} />
-        </div>
-      </section>
 
-
-    <a
+              <a
   href={`https://twitter.com/intent/tweet?text=🐇 Analyzing ${data.tokenAnalytics.symbol} on Bags.fm - ${data.tokenAnalytics.fees.lifetimeFeesCollected.toFixed(2)} SOL lifetime fees! Check it out on GreenRabbit 👇&url=https://bags.fm/${data.address}`}
   target="_blank"
   rel="noopener noreferrer"
@@ -168,6 +162,18 @@ export default function Home() {
 >
   → Share on X
 </a>
+              
+            </p>
+          </div>
+
+    
+          
+          <TrendingUp size={32} className={styles.headerIcon} />
+        </div>
+      </section>
+
+
+
       
       <section className={styles.section}>
         <h2>Fee Analytics</h2>
