@@ -159,6 +159,16 @@ export default function Home() {
         </div>
       </section>
 
+{' '}
+
+  href={`https://twitter.com/intent/tweet?text=🐇 Analyzing ${data.tokenAnalytics.symbol} on Bags.fm - ${data.tokenAnalytics.fees.lifetimeFeesCollected.toFixed(2)} SOL lifetime fees! Check it out on GreenRabbit 👇&url=https://bags.fm/${data.address}`}
+  target="_blank"
+  rel="noopener noreferrer"
+  style={{color: '#1DA1F2', fontSize: '0.8rem'}}
+>
+  → Share on X
+</a>
+      
       <section className={styles.section}>
         <h2>Fee Analytics</h2>
         <TokenMetrics metrics={data.tokenAnalytics.fees} />
