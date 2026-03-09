@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { TrendingUp } from 'lucide-react'
 import TokenForm from '@/components/TokenForm'
 import TokenMetrics from '@/components/TokenMetrics'
@@ -47,6 +47,14 @@ export default function Home() {
   const [copied, setCopied] = useState(false)
   const [copied2, setCopied2] = useState(false)
   const [showCompare, setShowCompare] = useState(false)
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem('autoAnalyze')
+    if (stored) {
+      sessionStorage.removeItem('autoAnalyze')
+      handleTokenSubmit(stored)
+    }
+  }, [])
 
   const fetchToken = async (tokenAddress: string): Promise<TokenData | null> => {
     const response = await fetch('/api/token', {
@@ -149,32 +157,24 @@ export default function Home() {
                 href={`https://bags.fm/${data.address}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{color: '#00d084', fontSize: '0.8rem'}}
+                style={{color: '#00d084', fontSize: '0.8rem', marginRight: '0.5rem'}}
               >
                 → Bags.fm
               </a>
-
               <a
-  href={`https://twitter.com/intent/tweet?text=🐇 Analyzing ${data.tokenAnalytics.symbol} on Bags.fm - ${data.tokenAnalytics.fees.lifetimeFeesCollected.toFixed(2)} SOL lifetime fees! Check it out on GreenRabbit 👇&url=https://bags.fm/${data.address}`}
-  target="_blank"
-  rel="noopener noreferrer"
-  style={{color: '#1DA1F2', fontSize: '0.8rem'}}
->
-  → Share on X
-</a>
-              
+                href={`https://twitter.com/intent/tweet?text=🐇 Analyzing ${data.tokenAnalytics.symbol} on Bags.fm - ${data.tokenAnalytics.fees.lifetimeFeesCollected.toFixed(2)} SOL lifetime fees! Check it on GreenRabbit 👇&url=https://greenrabbit-app.vercel.app/${data.address}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{color: '#1DA1F2', fontSize: '0.8rem'}}
+              >
+                → Share on X
+              </a>
             </p>
           </div>
-
-    
-          
           <TrendingUp size={32} className={styles.headerIcon} />
         </div>
       </section>
 
-
-
-      
       <section className={styles.section}>
         <h2>Fee Analytics</h2>
         <TokenMetrics metrics={data.tokenAnalytics.fees} />
@@ -217,7 +217,6 @@ export default function Home() {
 
         {tokenData && !loading && (
           <>
-            {/* Compare button */}
             {!showCompare && (
               <div style={{textAlign: 'center', margin: '1rem 0'}}>
                 <button
@@ -229,7 +228,6 @@ export default function Home() {
               </div>
             )}
 
-            {/* Second token input */}
             {showCompare && (
               <div style={{margin: '1rem 0'}}>
                 <TokenForm onSubmit={handleToken2Submit} loading={loading2} placeholder="Enter second token address..." />
@@ -237,13 +235,11 @@ export default function Home() {
               </div>
             )}
 
-            {/* Side by side or single */}
             <div style={{display: 'flex', gap: '2rem', alignItems: 'flex-start', flexWrap: 'wrap'}}>
               {renderTokenCard(tokenData, 1)}
               {tokenData2 && renderTokenCard(tokenData2, 2)}
             </div>
 
-            {/* AI Analysis */}
             <section className={styles.section}>
               {billingError ? (
                 <div className={styles.card} style={{textAlign: 'center', padding: '2rem'}}>
