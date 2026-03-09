@@ -7,6 +7,7 @@ import TokenMetrics from '@/components/TokenMetrics'
 import CreatorInfo from '@/components/CreatorInfo'
 import Analysis from '@/components/Analysis'
 import styles from './page.module.css'
+import ThemeToggle from '@/components/ThemeToggle'
 
 interface TokenAnalytics {
   address: string
@@ -101,6 +102,7 @@ export default function Home() {
   return (
     <main className={styles.main}>
       <header className={styles.header}>
+        <ThemeToggle />
         <div className={styles.headerContent}>
           <div className={styles.logo}>
             <span style={{fontSize: '2rem'}}>🐇</span>
