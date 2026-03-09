@@ -129,9 +129,18 @@ export default function Home() {
                   <p className={styles.tokenName}>
                     {tokenData.tokenAnalytics.name || 'Unknown Token'}
                   </p>
-                  <p className={styles.address}>
-                    Address: <span>{tokenData.address.slice(0, 12)}...{tokenData.address.slice(-12)}</span>
-                  </p>
+               <p className={styles.address}>
+  Address: <span>{tokenData.address.slice(0, 12)}...{tokenData.address.slice(-12)}</span>
+  {' '}
+  <a 
+    href={`https://bags.fm/t/${tokenData.address}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    style={{color: '#00d084', fontSize: '0.85rem'}}
+  >
+    → View on Bags.fm
+  </a>
+</p>
                 </div>
                 <TrendingUp size={48} className={styles.headerIcon} />
               </div>
