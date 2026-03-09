@@ -159,8 +159,8 @@ export default function Home() {
         </div>
       </section>
 
-{' '}
 
+    <a
   href={`https://twitter.com/intent/tweet?text=🐇 Analyzing ${data.tokenAnalytics.symbol} on Bags.fm - ${data.tokenAnalytics.fees.lifetimeFeesCollected.toFixed(2)} SOL lifetime fees! Check it out on GreenRabbit 👇&url=https://bags.fm/${data.address}`}
   target="_blank"
   rel="noopener noreferrer"
