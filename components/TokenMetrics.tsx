@@ -83,7 +83,25 @@ export default function TokenMetrics({ metrics, price, volume24h, liquidity }: T
         <div className={styles.metricValue}>{metrics.totalFeePercentage.toFixed(2)}%</div>
         <div className={styles.metricSubtext}>Per transaction</div>
       </div>
+{/* Trader Fee */}
+<div className={styles.metricCard}>
+  <div className={styles.metricLabel}>Trader Fee %</div>
+  <div className={styles.metricValue}>{traderFee.toFixed(2)}%</div>
+  <div className={styles.metricSubtext}>Of total fees</div>
+</div>
 
+{/* Fee Split */}
+<div className={styles.metricCard}>
+  <div className={styles.metricLabel}>Fee Split Ratio</div>
+  <div className={styles.feeVisualization}>
+    <div className={styles.creatorBar} style={{ width: `${metrics.creatorFeePercentage}%` }} />
+    <div className={styles.traderBar} style={{ width: `${traderFee}%` }} />
+  </div>
+  <div className={styles.feeLegend}>
+    <span className={styles.creatorLegend}>Creator</span>
+    <span className={styles.traderLegend}>Trader</span>
+  </div>
+</div>
     </div>
   )
 }
