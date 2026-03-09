@@ -135,7 +135,7 @@ export default function Home() {
   Address: <span>{tokenData.address.slice(0, 12)}...{tokenData.address.slice(-12)}</span>
   {' '}
   <a 
-    href={`https://bags.fm/t/${tokenData.address}`}
+    href={`https://bags.fm/${tokenData.address}`}
     target="_blank"
     rel="noopener noreferrer"
     style={{color: '#00d084', fontSize: '0.85rem'}}
