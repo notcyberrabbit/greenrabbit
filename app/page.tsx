@@ -132,8 +132,18 @@ export default function Home() {
                     {tokenData.tokenAnalytics.name || 'Unknown Token'}
                   </p>
                <p className={styles.address}>
+<p className={styles.address}>
   Address: <span>{tokenData.address.slice(0, 12)}...{tokenData.address.slice(-12)}</span>
   {' '}
+  <button
+    onClick={() => {
+      navigator.clipboard.writeText(tokenData.address)
+      alert('Copied!')
+    }}
+    style={{background: 'transparent', border: '1px solid #00d084', color: '#00d084', padding: '0.2rem 0.5rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', marginRight: '0.5rem'}}
+  >
+    📋 Copy
+  </button>
   <a 
     href={`https://bags.fm/${tokenData.address}`}
     target="_blank"
