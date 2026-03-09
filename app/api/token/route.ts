@@ -9,19 +9,33 @@ function isValidTokenAddress(address: string): boolean {
 
 async function fetchTokenMetadata(tokenAddress: string) {
   try {
-    const response = await fetch(
-      `https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`,
-      { next: { revalidate: 60 } }
+    // Get price, volume, liquidity
+    const pairsRes = await fetch(
+      `https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`
     )
-    const data = await response.json()
-    const pair = data.pairs?.[0]
-    if (pair) {
-      return {
-        name: pair.baseToken.name,
-        symbol: pair.baseToken.symbol,
-      }
+    const pairsData = await pairsRes.json()
+    const pair = pairsData.pairs?.[0]
+
+    // Get icon, description, social links
+    const profileRes = await fetch(
+      `https://api.dexscreener.com/token-profiles/latest/v1?token=${tokenAddress}`
+    )
+    const profileData = await profileRes.json()
+    const profile = Array.isArray(profileData)
+      ? profileData.find((p: any) => p.tokenAddress === tokenAddress)
+      : null
+
+    return {
+      name: pair?.baseToken?.name || null,
+      symbol: pair?.baseToken?.symbol || null,
+      priceUsd: pair?.priceUsd || null,
+      priceChange24h: pair?.priceChange?.h24 || null,
+      volume24h: pair?.volume?.h24 || null,
+      liquidity: pair?.liquidity?.usd || null,
+      icon: profile?.icon || null,
+      description: profile?.description || null,
+      links: profile?.links || [],
     }
-    return null
   } catch (e) {
     console.error('[Dexscreener] Error:', e)
     return null
@@ -55,7 +69,6 @@ export async function POST(request: NextRequest) {
     let feesInSol = 0
     let creators: any[] = []
 
-    // Fetch all data in parallel
     const [feesResult, creatorsResult, metadata] = await Promise.allSettled([
       sdk.state.getTokenLifetimeFees(tokenMint),
       sdk.state.getTokenCreators(tokenMint),
@@ -64,8 +77,6 @@ export async function POST(request: NextRequest) {
 
     if (feesResult.status === 'fulfilled') {
       feesInSol = Number(feesResult.value) / LAMPORTS_PER_SOL
-    } else {
-      console.error('[Bags SDK] Fees error:', feesResult.reason)
     }
 
     if (creatorsResult.status === 'fulfilled') {
@@ -79,8 +90,6 @@ export async function POST(request: NextRequest) {
         isVerified: !!c.providerUsername,
         createdAt: new Date().toISOString(),
       }))
-    } else {
-      console.error('[Bags SDK] Creators error:', creatorsResult.reason)
     }
 
     if (feesInSol === 0 && creators.length === 0) {
@@ -90,14 +99,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const tokenMeta = metadata.status === 'fulfilled' ? metadata.value : null
+    const meta = metadata.status === 'fulfilled' ? metadata.value : null
 
     return NextResponse.json({
       address: cleanAddress,
       tokenAnalytics: {
         address: cleanAddress,
-        symbol: tokenMeta?.symbol || cleanAddress.slice(0, 6).toUpperCase(),
-        name: tokenMeta?.name || `Token ${cleanAddress.slice(0, 8)}...`,
+        symbol: meta?.symbol || cleanAddress.slice(0, 6).toUpperCase(),
+        name: meta?.name || `Token ${cleanAddress.slice(0, 8)}...`,
+        icon: meta?.icon || null,
+        description: meta?.description || null,
+        links: meta?.links || [],
+        price: {
+          usd: meta?.priceUsd || null,
+          change24h: meta?.priceChange24h || null,
+        },
+        volume24h: meta?.volume24h || null,
+        liquidity: meta?.liquidity || null,
         fees: {
           lifetimeFeesCollected: feesInSol,
           feesCollectedNative: feesInSol,
