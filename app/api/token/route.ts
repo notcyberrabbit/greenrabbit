@@ -1,11 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { BagsSDK } from '@bagsfm/bags-sdk'
-import { PublicKey, Connection } from '@solana/web3.js'
-import { LAMPORTS_PER_SOL } from '@solana/web3.js'
+import { PublicKey, Connection, LAMPORTS_PER_SOL } from '@solana/web3.js'
 
 function isValidTokenAddress(address: string): boolean {
   const base58Regex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
   return base58Regex.test(address)
+}
+
+async function fetchTokenMetadata(tokenAddress: string) {
+  try {
+    const response = await fetch(
+      `https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`,
+      { next: { revalidate: 60 } }
+    )
+    const data = await response.json()
+    const pair = data.pairs?.[0]
+    if (pair) {
+      return {
+        name: pair.baseToken.name,
+        symbol: pair.baseToken.symbol,
+      }
+    }
+    return null
+  } catch (e) {
+    console.error('[Dexscreener] Error:', e)
+    return null
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -21,7 +41,6 @@ export async function POST(request: NextRequest) {
     }
 
     const cleanAddress = tokenAddress.trim()
-
     const BAGS_API_KEY = process.env.BAGS_API_KEY
     const SOLANA_RPC_URL = process.env.SOLANA_RPC_URL
 
@@ -36,16 +55,21 @@ export async function POST(request: NextRequest) {
     let feesInSol = 0
     let creators: any[] = []
 
-    try {
-      const feesLamports = await sdk.state.getTokenLifetimeFees(tokenMint)
-      feesInSol = Number(feesLamports) / LAMPORTS_PER_SOL
-    } catch (e) {
-      console.error('[Bags SDK] Fees error:', e)
+    // Fetch all data in parallel
+    const [feesResult, creatorsResult, metadata] = await Promise.allSettled([
+      sdk.state.getTokenLifetimeFees(tokenMint),
+      sdk.state.getTokenCreators(tokenMint),
+      fetchTokenMetadata(cleanAddress),
+    ])
+
+    if (feesResult.status === 'fulfilled') {
+      feesInSol = Number(feesResult.value) / LAMPORTS_PER_SOL
+    } else {
+      console.error('[Bags SDK] Fees error:', feesResult.reason)
     }
 
-    try {
-      const creatorsRaw = await sdk.state.getTokenCreators(tokenMint)
-      creators = creatorsRaw.map((c: any) => ({
+    if (creatorsResult.status === 'fulfilled') {
+      creators = creatorsResult.value.map((c: any) => ({
         address: c.wallet,
         name: c.providerUsername ?? c.username ?? null,
         provider: c.provider ?? null,
@@ -55,8 +79,8 @@ export async function POST(request: NextRequest) {
         isVerified: !!c.providerUsername,
         createdAt: new Date().toISOString(),
       }))
-    } catch (e) {
-      console.error('[Bags SDK] Creators error:', e)
+    } else {
+      console.error('[Bags SDK] Creators error:', creatorsResult.reason)
     }
 
     if (feesInSol === 0 && creators.length === 0) {
@@ -66,19 +90,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const tokenMeta = metadata.status === 'fulfilled' ? metadata.value : null
+
     return NextResponse.json({
       address: cleanAddress,
       tokenAnalytics: {
         address: cleanAddress,
-        symbol: cleanAddress.slice(0, 6).toUpperCase(),
-        name: `Token ${cleanAddress.slice(0, 8)}...`,
-     fees: {
-  lifetimeFeesCollected: feesInSol,
-  feesCollectedNative: feesInSol,
-  creatorFeePercentage: 0,
-  totalFeePercentage: 0,
-  currency: 'SOL',
-},
+        symbol: tokenMeta?.symbol || cleanAddress.slice(0, 6).toUpperCase(),
+        name: tokenMeta?.name || `Token ${cleanAddress.slice(0, 8)}...`,
+        fees: {
+          lifetimeFeesCollected: feesInSol,
+          feesCollectedNative: feesInSol,
+          creatorFeePercentage: 0,
+          totalFeePercentage: 0,
+          currency: 'SOL',
+        },
         creators,
       },
     })
