@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { TrendingUp } from 'lucide-react'
 import TokenForm from '@/components/TokenForm'
 import TokenMetrics from '@/components/TokenMetrics'
+import TokenProfile from '@/components/TokenProfile'
 import CreatorInfo from '@/components/CreatorInfo'
 import Analysis from '@/components/Analysis'
 import styles from './page.module.css'
@@ -13,6 +14,12 @@ interface TokenAnalytics {
   address: string
   symbol: string
   name: string
+  icon?: string | null
+  description?: string | null
+  links?: { type?: string, label?: string, url: string }[]
+  price?: { usd: string | null, change24h: number | null }
+  volume24h?: number | null
+  liquidity?: number | null
   fees: {
     lifetimeFeesCollected: number
     creatorFeePercentage: number
@@ -141,43 +148,67 @@ export default function Home() {
     <div style={{flex: 1, minWidth: 0}}>
       <section className={styles.section}>
         <div className={styles.tokenHeader}>
-          <div>
-            <h2>{data.tokenAnalytics.symbol || 'TOKEN'}</h2>
-            <p className={styles.tokenName}>{data.tokenAnalytics.name || 'Unknown Token'}</p>
-            <p className={styles.address}>
-              <span>{data.address.slice(0, 10)}...{data.address.slice(-10)}</span>
-              {' '}
-              <button
-                onClick={() => handleCopy(data.address, which)}
-                style={{background: 'transparent', border: '1px solid #00d084', color: '#00d084', padding: '0.2rem 0.5rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', marginRight: '0.5rem'}}
-              >
-                {which === 1 ? (copied ? '✅' : '📋') : (copied2 ? '✅' : '📋')}
-              </button>
-              <a
-                href={`https://bags.fm/${data.address}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{color: '#00d084', fontSize: '0.8rem', marginRight: '0.5rem'}}
-              >
-                → Bags.fm
-              </a>
-              <a
-                href={`https://twitter.com/intent/tweet?text=🐇 Analyzing ${data.tokenAnalytics.symbol} on Bags.fm - ${data.tokenAnalytics.fees.lifetimeFeesCollected.toFixed(2)} SOL lifetime fees! Check it on GreenRabbit 👇&url=https://greenrabbit-app.vercel.app/${data.address}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{color: '#1DA1F2', fontSize: '0.8rem'}}
-              >
-                → Share on X
-              </a>
-            </p>
+          <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
+            {data.tokenAnalytics.icon && (
+              <img
+                src={data.tokenAnalytics.icon}
+                alt={data.tokenAnalytics.symbol}
+                style={{width: '56px', height: '56px', borderRadius: '50%', border: '2px solid #00d084', objectFit: 'cover'}}
+              />
+            )}
+            <div>
+              <h2>{data.tokenAnalytics.symbol || 'TOKEN'}</h2>
+              <p className={styles.tokenName}>{data.tokenAnalytics.name || 'Unknown Token'}</p>
+              <p className={styles.address}>
+                <span>{data.address.slice(0, 10)}...{data.address.slice(-10)}</span>
+                {' '}
+                <button
+                  onClick={() => handleCopy(data.address, which)}
+                  style={{background: 'transparent', border: '1px solid #00d084', color: '#00d084', padding: '0.2rem 0.5rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', marginRight: '0.5rem'}}
+                >
+                  {which === 1 ? (copied ? '✅' : '📋') : (copied2 ? '✅' : '📋')}
+                </button>
+                <a
+                  href={`https://bags.fm/${data.address}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{color: '#00d084', fontSize: '0.8rem', marginRight: '0.5rem'}}
+                >
+                  → Bags.fm
+                </a>
+                <a
+                  href={`https://twitter.com/intent/tweet?text=🐇 Analyzing ${data.tokenAnalytics.symbol} on Bags.fm - ${data.tokenAnalytics.fees.lifetimeFeesCollected.toFixed(2)} SOL lifetime fees! Check it on GreenRabbit 👇&url=https://greenrabbit-app.vercel.app/${data.address}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{color: '#1DA1F2', fontSize: '0.8rem'}}
+                >
+                  → Share on X
+                </a>
+              </p>
+            </div>
           </div>
           <TrendingUp size={32} className={styles.headerIcon} />
         </div>
       </section>
 
+      {/* Token Profile - icon, description, links */}
+      {(data.tokenAnalytics.description || (data.tokenAnalytics.links && data.tokenAnalytics.links.length > 0)) && (
+        <section className={styles.section}>
+          <TokenProfile
+            description={data.tokenAnalytics.description}
+            links={data.tokenAnalytics.links}
+          />
+        </section>
+      )}
+
       <section className={styles.section}>
-        <h2>Fee Analytics</h2>
-        <TokenMetrics metrics={data.tokenAnalytics.fees} />
+        <h2>Analytics</h2>
+        <TokenMetrics
+          metrics={data.tokenAnalytics.fees}
+          price={data.tokenAnalytics.price}
+          volume24h={data.tokenAnalytics.volume24h}
+          liquidity={data.tokenAnalytics.liquidity}
+        />
       </section>
 
       {data.tokenAnalytics.creators && data.tokenAnalytics.creators.length > 0 && (
