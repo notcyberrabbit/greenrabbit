@@ -38,7 +38,7 @@ export default function TokenMetrics({ metrics, price, volume24h, liquidity }: T
           <div className={styles.metricLabel}>Price</div>
           <div className={styles.metricValue}>${parseFloat(price.usd).toFixed(6)}</div>
           {change !== null && change !== undefined && (
-            <div className={styles.metricSubtext} style={{color: changeColor}}>
+            <div style={{fontSize: '0.8rem', color: changeColor, marginTop: '0.3rem'}}>
               {changePrefix}{change}% (24h)
             </div>
           )}
