@@ -5,9 +5,10 @@ import styles from '@/app/page.module.css'
 interface TokenFormProps {
   onSubmit: (address: string) => void
   loading: boolean
+  placeholder?: string
 }
 
-export default function TokenForm({ onSubmit, loading }: TokenFormProps) {
+export default function TokenForm({ onSubmit, loading, placeholder }: TokenFormProps) {
   const [address, setAddress] = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -28,13 +29,12 @@ export default function TokenForm({ onSubmit, loading }: TokenFormProps) {
             id="token"
             type="text"
             className={styles.formInput}
-            placeholder="Enter token address (43-44 characters, base58)"
+            placeholder={placeholder || 'Enter token address (base58)'}
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             disabled={loading}
           />
         </div>
-
         <button
           type="submit"
           className={styles.submitBtn}
