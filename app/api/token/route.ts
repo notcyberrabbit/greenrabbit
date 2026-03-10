@@ -9,17 +9,11 @@ function isValidTokenAddress(address: string): boolean {
 
 async function fetchTokenMetadata(tokenAddress: string) {
   try {
-    // Get price, volume, liquidity
-    const pairsRes = await fetch(
-      `https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`
-    )
+    const pairsRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`)
     const pairsData = await pairsRes.json()
     const pair = pairsData.pairs?.[0]
 
-    // Get icon, description, social links
-    const profileRes = await fetch(
-      `https://api.dexscreener.com/token-profiles/latest/v1?token=${tokenAddress}`
-    )
+    const profileRes = await fetch(`https://api.dexscreener.com/token-profiles/latest/v1?token=${tokenAddress}`)
     const profileData = await profileRes.json()
     const profile = Array.isArray(profileData)
       ? profileData.find((p: any) => p.tokenAddress === tokenAddress)
@@ -39,6 +33,34 @@ async function fetchTokenMetadata(tokenAddress: string) {
   } catch (e) {
     console.error('[Dexscreener] Error:', e)
     return null
+  }
+}
+
+async function fetchClaimStats(tokenAddress: string, apiKey: string) {
+  try {
+    const res = await fetch(
+      `https://public-api-v2.bags.fm/api/v1/token-launch/claim-stats?tokenMint=${tokenAddress}`,
+      { headers: { 'x-api-key': apiKey } }
+    )
+    if (!res.ok) return []
+    const data = await res.json()
+    if (data.success && Array.isArray(data.response)) {
+      return data.response.map((s: any) => ({
+        wallet: s.wallet,
+        username: s.providerUsername || s.bagsUsername || s.username || null,
+        pfp: s.pfp || null,
+        provider: s.provider || null,
+        twitterUsername: s.twitterUsername || null,
+        royaltyBps: s.royaltyBps || 0,
+        isCreator: s.isCreator || false,
+        isAdmin: s.isAdmin || false,
+        totalClaimed: Number(s.totalClaimed) / LAMPORTS_PER_SOL,
+      }))
+    }
+    return []
+  } catch (e) {
+    console.error('[Claim Stats] Error:', e)
+    return []
   }
 }
 
@@ -69,10 +91,11 @@ export async function POST(request: NextRequest) {
     let feesInSol = 0
     let creators: any[] = []
 
-    const [feesResult, creatorsResult, metadata] = await Promise.allSettled([
+    const [feesResult, creatorsResult, metadata, claimStats] = await Promise.allSettled([
       sdk.state.getTokenLifetimeFees(tokenMint),
       sdk.state.getTokenCreators(tokenMint),
       fetchTokenMetadata(cleanAddress),
+      fetchClaimStats(cleanAddress, BAGS_API_KEY),
     ])
 
     if (feesResult.status === 'fulfilled') {
@@ -100,6 +123,11 @@ export async function POST(request: NextRequest) {
     }
 
     const meta = metadata.status === 'fulfilled' ? metadata.value : null
+    const claims = claimStats.status === 'fulfilled' ? claimStats.value : []
+
+    // Összesített claimed amount
+    const totalClaimedSol = claims.reduce((sum: number, c: any) => sum + c.totalClaimed, 0)
+    const unclaimedSol = Math.max(0, feesInSol - totalClaimedSol)
 
     return NextResponse.json({
       address: cleanAddress,
@@ -119,10 +147,13 @@ export async function POST(request: NextRequest) {
         fees: {
           lifetimeFeesCollected: feesInSol,
           feesCollectedNative: feesInSol,
+          totalClaimedSol,
+          unclaimedSol,
           creatorFeePercentage: 0,
           totalFeePercentage: 0,
           currency: 'SOL',
         },
+        claimStats: claims,
         creators,
       },
     })
