@@ -1,28 +1,34 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 
 export default function ThemeToggle() {
   const [isDark, setIsDark] = useState(true)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const saved = localStorage.getItem('theme')
-    if (saved === 'light') {
-      setIsDark(false)
-      document.documentElement.classList.add('light')
-    }
+    setMounted(true)
+    try {
+      const saved = localStorage.getItem('theme')
+      if (saved === 'light') {
+        setIsDark(false)
+        document.documentElement.classList.add('light')
+      }
+    } catch (e) {}
   }, [])
 
   const toggle = () => {
-    if (isDark) {
-      document.documentElement.classList.add('light')
-      localStorage.setItem('theme', 'light')
-    } else {
+    const newIsDark = !isDark
+    setIsDark(newIsDark)
+    if (newIsDark) {
       document.documentElement.classList.remove('light')
-      localStorage.setItem('theme', 'dark')
+      try { localStorage.setItem('theme', 'dark') } catch (e) {}
+    } else {
+      document.documentElement.classList.add('light')
+      try { localStorage.setItem('theme', 'light') } catch (e) {}
     }
-    setIsDark(!isDark)
   }
+
+  if (!mounted) return null
 
   return (
     <button
@@ -38,6 +44,7 @@ export default function ThemeToggle() {
         position: 'absolute',
         top: '1rem',
         right: '1rem',
+        zIndex: 10,
       }}
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
