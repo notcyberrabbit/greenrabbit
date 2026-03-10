@@ -249,11 +249,14 @@ export default function Home() {
   return (
     <main className={styles.main}>
       <header className={styles.header}>
-        <ThemeToggle />
+        <div style={{ position: 'absolute', top: '1rem', right: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', zIndex: 10 }}>
+          <a href="/about" style={{ color: '#00d084', border: '1px solid #00d084', padding: '0.4rem 0.8rem', borderRadius: '4px', fontSize: '0.75rem', fontFamily: 'Space Mono, monospace', fontWeight: 700, textDecoration: 'none', textTransform: 'uppercase' }}>About</a>
+          <ThemeToggle />
+        </div>
         <div className={styles.headerContent}>
           <div className={styles.logo}>
             <span style={{ fontSize: '2rem' }}>🐇</span>
-            <h1>GreenRabbit</h1>
+            <h1>GreenRabbitApp</h1>
           </div>
           <p className={styles.tagline}>Token Analytics Dashboard for Bags.fm</p>
         </div>
