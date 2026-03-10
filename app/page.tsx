@@ -20,6 +20,15 @@ interface TokenAnalytics {
   price?: { usd: string | null, change24h: number | null }
   volume24h?: number | null
   liquidity?: number | null
+  claimStats?: {
+    wallet: string
+    username: string | null
+    pfp: string | null
+    twitterUsername: string | null
+    royaltyBps: number
+    isCreator: boolean
+    totalClaimed: number
+  }[]
   fees: {
     lifetimeFeesCollected: number
     creatorFeePercentage: number
