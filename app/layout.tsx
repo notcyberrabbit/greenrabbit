@@ -2,15 +2,17 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'GreenRabbit - Solana Wallet Analyzer',
-  description: 'Analyze your Solana wallet with AI-powered insights for Bags.fm tokens',
+  title: 'GreenRabbitApp',
+  description: 'Token Analytics Dashboard for Bags.fm — AI-powered insights, fee tracking, and creator analytics on Solana.',
+  openGraph: {
+    title: 'GreenRabbitApp',
+    description: 'Token Analytics Dashboard for Bags.fm',
+    url: 'https://greenrabbit-app.vercel.app',
+    siteName: 'GreenRabbitApp',
+  },
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
