@@ -106,7 +106,7 @@ export default function AboutPage() {
             🐇 Open App
           </Link>
         </div>
-          <p>*-*
+          <p>
           </p>
          {/* Creator button */}
         <div style={{ textAlign: 'center' }}>
