@@ -41,10 +41,6 @@ export default function ThemeToggle() {
         borderRadius: '4px',
         cursor: 'pointer',
         fontSize: '1rem',
-        position: 'absolute',
-        top: '1rem',
-        right: '1rem',
-        zIndex: 10,
       }}
       title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
