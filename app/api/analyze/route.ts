@@ -48,7 +48,8 @@ Provide a mystical yet insightful analysis in 2-3 paragraphs using language like
       error?.status === 400 && (
         errorMessage.includes('credit') ||
         errorMessage.includes('billing') ||
-        errorMessage.includes('balance')
+        errorMessage.includes('balance') ||
+        error?.error?.error?.message?.includes('credit')
       )
 
     if (isBillingError) {
