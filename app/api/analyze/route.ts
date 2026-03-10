@@ -16,13 +16,11 @@ export async function POST(request: NextRequest) {
     const { fees, creators, symbol } = analytics
 
     const prompt = `You are a mystical Oracle analyzing Solana token economics on Bags.fm.
-
 TOKEN: ${symbol} (${tokenAddress})
 Lifetime Fees: ${fees.lifetimeFeesCollected} SOL
 Creator Fee: ${fees.creatorFeePercentage}%
 Total Fee: ${fees.totalFeePercentage}%
 Creators: ${creators.length > 0 ? creators.map((c: any) => c.name || c.address?.slice(0, 8)).join(', ') : 'Unknown'}
-
 Provide a mystical yet insightful analysis in 2-3 paragraphs using language like "The Rabbit senses...", "The blockchain whispers...". Focus on fee structure, creator profile, and opportunities. Keep it under 300 words.`
 
     const message = await anthropic.messages.create({
@@ -40,19 +38,29 @@ Provide a mystical yet insightful analysis in 2-3 paragraphs using language like
 
   } catch (error: any) {
     console.error('[Analysis API] Error:', error)
+    console.error('[Analysis API] Error status:', error?.status)
+    console.error('[Analysis API] Error message:', error?.message)
+    console.error('[Analysis API] Error body:', JSON.stringify(error?.error))
 
-    // Check if it's a credit/billing error
-    const isBillingError = error?.status === 400 &&
-      error?.error?.error?.message?.includes('credit balance')
+    // Billing/credit errors
+    const errorMessage = error?.message || error?.error?.error?.message || ''
+    const isBillingError =
+      error?.status === 400 && (
+        errorMessage.includes('credit') ||
+        errorMessage.includes('billing') ||
+        errorMessage.includes('balance')
+      )
 
     if (isBillingError) {
-      return NextResponse.json({
-        analysis: null,
-        billingError: true,
-      })
+      return NextResponse.json({ analysis: null, billingError: true })
     }
 
-    // Other errors - return fallback
+    // API key missing
+    if (error?.status === 401) {
+      return NextResponse.json({ analysis: null, billingError: true })
+    }
+
+    // Return fallback for other errors
     return NextResponse.json({
       analysis: `The Rabbit observes this token with quiet curiosity. The fee structure and creator profile reveal the foundations of its journey through the Solana ecosystem. Ancient patterns suggest both promise and caution — as with all things on the blockchain, wisdom lies in patient observation.`,
       billingError: false,
