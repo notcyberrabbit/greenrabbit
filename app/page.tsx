@@ -424,7 +424,10 @@ export default function Home() {
       </div>
 
       <footer className={styles.footer}>
-        <p>🐰 GreenRabbit — Token Analytics Powered by AI & Bags.fm</p>
+        <p>🐰 GreenRabbitApp — Token Analytics Powered by AI & Bags.fm</p>
+        <p style={{ marginTop: '0.5rem' }}>
+          <a href="/about" style={{ color: '#00d084', fontSize: '0.8rem' }}>About</a>
+        </p>
       </footer>
     </main>
   )
