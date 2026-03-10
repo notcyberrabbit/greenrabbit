@@ -224,6 +224,7 @@ export default function Home() {
           price={data.tokenAnalytics.price}
           volume24h={data.tokenAnalytics.volume24h}
           liquidity={data.tokenAnalytics.liquidity}
+          claimStats={data.tokenAnalytics.claimStats}
         />
       </section>
 
