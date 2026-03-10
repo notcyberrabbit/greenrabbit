@@ -106,10 +106,12 @@ export default function AboutPage() {
             🐇 Open App
           </Link>
         </div>
+          <p>*-*
+          </p>
          {/* Creator button */}
         <div style={{ textAlign: 'center' }}>
           <Link href="https://x.com/NotCyberRabbit" style={{ display: 'inline-block', background: '#00d084', color: '#0a0e27', padding: '0.85rem 2rem', borderRadius: '4px', fontFamily: 'Space Mono, monospace', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', textDecoration: 'none', fontSize: '0.9rem' }}>
-            👤 NotCyberRabbit on X
+            💎 NotCyberRabbit on X
           </Link>
         </div>
       </div>
