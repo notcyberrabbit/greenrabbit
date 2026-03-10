@@ -1,3 +1,4 @@
+'use client'
 import { useState } from 'react'
 import { Search } from 'lucide-react'
 import styles from '@/app/page.module.css'
@@ -21,28 +22,28 @@ export default function TokenForm({ onSubmit, loading, placeholder }: TokenFormP
   return (
     <form onSubmit={handleSubmit} className={styles.formSection}>
       <div className={styles.formCard}>
-        <div className={styles.formGroup}>
-          <label htmlFor="token" className={styles.formLabel}>
-            Token Address (Solana)
-          </label>
+        <label className={styles.formLabel}>
+          Token Address (Solana)
+        </label>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <input
-            id="token"
             type="text"
             className={styles.formInput}
             placeholder={placeholder || 'Enter token address (base58)'}
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             disabled={loading}
+            style={{ flex: 1 }}
           />
+          <button
+            type="submit"
+            className={styles.submitBtn}
+            disabled={loading || !address.trim()}
+          >
+            <Search size={16} />
+            {loading ? 'Analyzing...' : 'Analyze Token'}
+          </button>
         </div>
-        <button
-          type="submit"
-          className={styles.submitBtn}
-          disabled={loading || !address.trim()}
-        >
-          <Search size={18} />
-          {loading ? 'Analyzing...' : 'Analyze Token'}
-        </button>
       </div>
     </form>
   )
