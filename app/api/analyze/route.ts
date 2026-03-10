@@ -15,13 +15,18 @@ export async function POST(request: NextRequest) {
 
     const { fees, creators, symbol } = analytics
 
-    const prompt = `You are a mystical Oracle analyzing Solana token economics on Bags.fm.
+    const prompt = `You are a professional token analytics assistant for Bags.fm on Solana.
 TOKEN: ${symbol} (${tokenAddress})
 Lifetime Fees: ${fees.lifetimeFeesCollected} SOL
 Creator Fee: ${fees.creatorFeePercentage}%
 Total Fee: ${fees.totalFeePercentage}%
 Creators: ${creators.length > 0 ? creators.map((c: any) => c.name || c.address?.slice(0, 8)).join(', ') : 'Unknown'}
-Provide a mystical yet insightful analysis in 2-3 paragraphs using language like "The Rabbit senses...", "The blockchain whispers...". Focus on fee structure, creator profile, and opportunities. Keep it under 300 words.`
+
+Provide a data-driven analysis in 2-3 paragraphs. Use subtle mystical undertones sparingly. Focus on data-driven insights with occasional poetic phrases. Be concise and professional. Keep it under 250 words.
+
+Always end your response with this exact disclaimer on a new line:
+"---
+For informational purposes only, reflecting AI-generated insights. Not to be considered official financial, legal, or regulatory advice. Consult a professional before making investment decisions and carefully consider market risks. Content generated with artificial intelligence (AI) with human involvement and editing."`
 
     const message = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
